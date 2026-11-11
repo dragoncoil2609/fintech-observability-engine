@@ -46,9 +46,12 @@ resource "aws_iam_openid_connect_provider" "github" {
 
 data "aws_iam_policy_document" "github_oidc_trust" {
   statement {
-    sid     = "AllowGitHubActionsAssumeRoleWithOIDC"
-    effect  = "Allow"
-    actions = ["sts:AssumeRoleWithWebIdentity"]
+    sid    = "AllowGitHubActionsAssumeRoleWithOIDC"
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRoleWithWebIdentity",
+      "sts:TagSession"
+    ]
 
     principals {
       type        = "Federated"
@@ -62,9 +65,12 @@ data "aws_iam_policy_document" "github_oidc_trust" {
     }
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = local.github_oidc_allowed_subjects
+      values = [
+        "repo:${var.github_owner}/${var.github_repo}:*",
+        "repo:${var.github_owner}@*/${var.github_repo}@*:*"
+      ]
     }
   }
 }
